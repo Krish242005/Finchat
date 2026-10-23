@@ -17,32 +17,33 @@ import { useIsMobile } from "@/hooks/use-mobile"
 
 interface DatePickerWithRangeProps {
   className?: string;
+  selectedRange?: DateRange | undefined;
   onRangeChange: (range: DateRange | undefined) => void;
 }
 
 export function DatePickerWithRange({
   className,
+  selectedRange,
   onRangeChange,
 }: DatePickerWithRangeProps) {
   const [mounted, setMounted] = React.useState(false);
-  const [date, setDate] = React.useState<DateRange | undefined>(undefined);
+  const [date, setDate] = React.useState<DateRange | undefined>(selectedRange);
   const isMobile = useIsMobile();
 
   React.useEffect(() => {
     setMounted(true);
-    const initialRange = {
-      from: subMonths(new Date(), 1),
-      to: new Date(),
-    };
-    setDate(initialRange);
-    onRangeChange(initialRange);
   }, []);
 
   React.useEffect(() => {
-    if (mounted) {
-      onRangeChange(date);
+    if (selectedRange !== undefined) {
+      setDate(selectedRange);
     }
-  }, [date, mounted, onRangeChange]);
+  }, [selectedRange]);
+
+  const handleRangeChange = (newRange: DateRange | undefined) => {
+    setDate(newRange);
+    onRangeChange(newRange);
+  };
 
   return (
     <div className={cn("grid gap-2", className)}>
@@ -76,7 +77,7 @@ export function DatePickerWithRange({
             mode="range"
             defaultMonth={date?.from}
             selected={date}
-            onSelect={setDate}
+            onSelect={handleRangeChange}
             numberOfMonths={isMobile ? 1 : 2}
           />
         </PopoverContent>

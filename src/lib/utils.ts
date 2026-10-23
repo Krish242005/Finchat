@@ -12,6 +12,8 @@ export interface ParsedTransaction {
   category: string;
 }
 
+import { normalizeDateToISO } from './budget-calculations';
+
 export function parseCSVLine(line: string, headers?: string[]): ParsedTransaction {
   const parts = line.split(',').map(p => p.trim().replace(/^["']|["']$/g, ''));
 
@@ -27,7 +29,7 @@ export function parseCSVLine(line: string, headers?: string[]): ParsedTransactio
       if (!val) return;
 
       if (['date', 'time', 'txndate', 'transactiondate', 'dt'].includes(col)) {
-        date = val;
+        date = normalizeDateToISO(val) || val;
       } else if (['description', 'desc', 'details', 'merchant', 'item', 'particulars', 'narrative', 'payee', 'title', 'name'].includes(col)) {
         description = val;
       } else if (['amount', 'amt', 'price', 'cost', 'total', 'sum', 'value', 'debit', 'credit', 'inr', 'rupees'].includes(col)) {
@@ -42,9 +44,12 @@ export function parseCSVLine(line: string, headers?: string[]): ParsedTransactio
   parts.forEach(part => {
     if (!part) return;
 
-    if (!date && (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(part) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(part))) {
-      date = part;
-      return;
+    if (!date) {
+      const norm = normalizeDateToISO(part);
+      if (norm) {
+        date = norm;
+        return;
+      }
     }
 
     const cleanNum = part.replace(/[^0-9.-]/g, '');
@@ -56,14 +61,14 @@ export function parseCSVLine(line: string, headers?: string[]): ParsedTransactio
       }
     }
 
-    if (!description && !part.toUpperCase().startsWith('TXN-') && !part.toUpperCase().startsWith('ID-') && isNaN(Number(part)) && !/^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(part)) {
+    if (!description && !part.toUpperCase().startsWith('TXN-') && !part.toUpperCase().startsWith('ID-') && isNaN(Number(part)) && !normalizeDateToISO(part)) {
       description = part;
     }
   });
 
   return {
-    date: date || new Date().toISOString().split('T')[0],
-    description: description || parts.find(p => p && !p.toUpperCase().startsWith('TXN-') && !/^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(p)) || 'Financial Record',
+    date: normalizeDateToISO(date) || date || new Date().toISOString().split('T')[0],
+    description: description || parts.find(p => p && !p.toUpperCase().startsWith('TXN-') && !normalizeDateToISO(p)) || 'Financial Record',
     amount: amount,
     category: category || 'Miscellaneous'
   };

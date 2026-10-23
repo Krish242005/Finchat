@@ -3,6 +3,7 @@ import './globals.css';
 import { FirebaseClientProvider } from '@/firebase';
 import { Toaster } from '@/components/ui/toaster';
 import AuthInit from '@/components/AuthInit';
+import { FinancialDataProvider } from '@/context/financial-data-context';
 
 export const metadata: Metadata = {
   title: 'FinChat AI | Elite Financial Guardian',
@@ -24,7 +25,9 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <AuthInit />
-          {children}
+          <FinancialDataProvider>
+            {children}
+          </FinancialDataProvider>
           <Toaster />
         </FirebaseClientProvider>
       </body>

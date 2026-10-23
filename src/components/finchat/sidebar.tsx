@@ -24,8 +24,7 @@ import {
   SidebarMenuItem, 
   SidebarFooter
 } from '@/components/ui/sidebar';
-import { useFirestore, useUser } from '@/firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { useFinancialData } from '@/context/financial-data-context';
 
 const navItems = [
   { name: 'Overview & Intel', href: '/', icon: LayoutDashboard },
@@ -35,114 +34,9 @@ const navItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { user } = useUser();
-  const db = useFirestore();
-
-  const [insight, setInsight] = useState<string>('Analyzing financial records...');
-  const [insightType, setInsightType] = useState<'alert' | 'normal' | 'healthy'>('normal');
-  const [loadingInsight, setLoadingInsight] = useState<boolean>(true);
-
-  useEffect(() => {
-    async function generateDynamicInsight() {
-      if (!user || !db) {
-        setInsight('"Upload bank statements or CSV files to activate live AI guardian intelligence."');
-        setInsightType('normal');
-        setLoadingInsight(false);
-        return;
-      }
-
-      try {
-        setLoadingInsight(true);
-        const docsSnapshot = await getDocs(collection(db, 'users', user.uid, 'documents'));
-        
-        if (docsSnapshot.empty) {
-          setInsight('"Upload bank statements or CSV files in Ledger Docs to activate real-time guardian intelligence."');
-          setInsightType('normal');
-          setLoadingInsight(false);
-          return;
-        }
-
-        const catMap: Record<string, number> = {};
-        let totalSpent = 0;
-
-        const categoryAliases: Record<string, string> = {
-          'food': 'Food', 'dining': 'Food', 'groceries': 'Food', 'restaurants': 'Food', 'swiggy': 'Food', 'zomato': 'Food',
-          'rent': 'Rent', 'housing': 'Rent', 'lease': 'Rent',
-          'emi': 'EMI', 'loan': 'EMI', 'debt': 'EMI',
-          'travel': 'Travel', 'transport': 'Travel', 'uber': 'Travel', 'ola': 'Travel', 'fuel': 'Travel',
-          'shopping': 'Shopping', 'clothing': 'Shopping', 'fashion': 'Shopping', 'amazon': 'Shopping',
-          'utilities': 'Utilities', 'bills': 'Utilities', 'electricity': 'Utilities', 'wifi': 'Utilities'
-        };
-
-        for (const docSnap of docsSnapshot.docs) {
-          const chunksSnapshot = await getDocs(collection(db, 'users', user.uid, 'documents', docSnap.id, 'chunks'));
-          chunksSnapshot.forEach(chunk => {
-            const data = chunk.data();
-            const rawText = data.chunkText || '';
-            const parsed = parseCSVLine(rawText);
-            const amt = (data.amount !== undefined && !isNaN(Number(data.amount)) && Number(data.amount) > 0) 
-              ? Number(data.amount) 
-              : parsed.amount;
-
-            if (amt > 0) {
-              const rawCat = data.category && data.category !== 'Miscellaneous' ? data.category : parsed.category;
-              const lower = (rawCat || '').trim().toLowerCase();
-              const normCat = categoryAliases[lower] || (rawCat ? rawCat.charAt(0).toUpperCase() + rawCat.slice(1) : 'Miscellaneous');
-              
-              catMap[normCat] = (catMap[normCat] || 0) + amt;
-              totalSpent += amt;
-            }
-          });
-        }
-
-        const defaultBudgets: Record<string, number> = { 
-          'Food': 15000, 
-          'Rent': 45000, 
-          'EMI': 25000,
-          'Travel': 10000, 
-          'Shopping': 8000, 
-          'Utilities': 5000 
-        };
-
-        // Check for budget breaches
-        let breachMessage = '';
-        for (const [cat, spent] of Object.entries(catMap)) {
-          const limit = defaultBudgets[cat] || 10000;
-          if (spent > limit) {
-            const excess = Math.round(spent - limit);
-            breachMessage = `Budget limit breached in '${cat}' by ₹${excess.toLocaleString('en-IN')}. Tighten limits to protect your targets.`;
-            break;
-          }
-        }
-
-        if (breachMessage) {
-          setInsight(`"${breachMessage}"`);
-          setInsightType('alert');
-        } else if (totalSpent > 0) {
-          const sortedCats = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
-          if (sortedCats.length > 0) {
-            const [topCat, topAmt] = sortedCats[0];
-            setInsight(`"${topCat} accounts for your highest expenditure at ₹${Math.round(topAmt).toLocaleString('en-IN')}. Overall spending is well managed."`);
-            setInsightType('healthy');
-          } else {
-            setInsight('"All expense categories are currently within healthy guardrail limits."');
-            setInsightType('healthy');
-          }
-        } else {
-          setInsight('"No expense activity detected in your indexed financial documents."');
-          setInsightType('normal');
-        }
-      } catch (err) {
-        console.error("Error generating Guardian Insight:", err);
-        setInsight('"Upload bank statements to activate real-time guardian intelligence."');
-        setInsightType('normal');
-      } finally {
-        setLoadingInsight(false);
-      }
-    }
-
-    generateDynamicInsight();
-  }, [user, db, pathname]);
+  const { guardianInsight, isLoading: loadingInsight } = useFinancialData();
+  const insight = guardianInsight.insight;
+  const insightType = guardianInsight.insightType;
 
   return (
     <Sidebar className="border-r-0 shadow-2xl">

@@ -30,7 +30,7 @@ const CATEGORIES = [
   'Investment', 'Miscellaneous'
 ];
 
-export function AddExpenseDialog() {
+export function AddExpenseDialog({ onSuccess }: { onSuccess?: () => void } = {}) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -91,6 +91,7 @@ export function AddExpenseDialog() {
         description: `Successfully logged ₹${formData.amount} for ${formData.description}.`
       });
       setOpen(false);
+      onSuccess?.();
       setFormData({
         date: new Date().toISOString().split('T')[0],
         description: '',

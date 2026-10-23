@@ -18,39 +18,47 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-4 relative bg-white dark:bg-slate-900 rounded-xl", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
-        nav: "space-x-1 flex items-center",
-        nav_button: cn(
+        root: "relative",
+        months: "flex flex-col sm:flex-row gap-6 relative",
+        month: "space-y-3",
+        month_caption: "flex justify-center pt-1 relative items-center h-8",
+        caption_label: "text-sm font-bold text-foreground tracking-tight",
+        nav: "flex items-center justify-between absolute inset-x-0 top-4 px-2 z-20 pointer-events-none",
+        button_previous: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          "h-7 w-7 bg-white dark:bg-slate-900 p-0 opacity-70 hover:opacity-100 pointer-events-auto border-border shadow-xs rounded-md"
         ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-y-1",
-        head_row: "flex",
-        head_cell:
-          "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-        row: "flex w-full mt-2",
-        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-        day: cn(
+        button_next: cn(
+          buttonVariants({ variant: "outline" }),
+          "h-7 w-7 bg-white dark:bg-slate-900 p-0 opacity-70 hover:opacity-100 pointer-events-auto border-border shadow-xs rounded-md"
+        ),
+        month_grid: "w-full border-collapse space-y-1",
+        weekdays: "flex justify-between w-full mb-1",
+        weekday: "text-muted-foreground w-9 h-8 font-bold text-[0.75rem] uppercase flex items-center justify-center text-center",
+        weeks: "space-y-1",
+        week: "flex justify-between w-full mt-1",
+        day: "h-9 w-9 text-center text-sm p-0 relative focus-within:relative focus-within:z-20 flex items-center justify-center",
+        day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal aria-selected:opacity-100"
+          "h-9 w-9 p-0 font-medium text-xs aria-selected:opacity-100 flex items-center justify-center rounded-md transition-colors"
         ),
-        day_range_end: "day-range-end",
-        day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-accent text-accent-foreground",
-        day_outside:
-          "day-outside text-muted-foreground aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
-        day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle:
-          "aria-selected:bg-accent aria-selected:text-accent-foreground",
-        day_hidden: "invisible",
+        range_start: "day-range-start rounded-l-md bg-primary text-primary-foreground font-semibold",
+        range_end: "day-range-end rounded-r-md bg-primary text-primary-foreground font-semibold",
+        range_middle: "bg-primary/15 text-primary rounded-none font-medium",
+        selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+        today: "border border-primary/50 font-bold text-primary",
+        outside: "day-outside text-muted-foreground opacity-30 aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
+        disabled: "text-muted-foreground opacity-30 cursor-not-allowed",
+        hidden: "invisible",
+        // Backward-compatibility keys:
+        caption: "flex justify-center pt-1 relative items-center h-8",
+        table: "w-full border-collapse space-y-1",
+        head_row: "flex justify-between w-full mb-1",
+        head_cell: "text-muted-foreground w-9 h-8 font-bold text-[0.75rem] uppercase flex items-center justify-center text-center",
+        row: "flex justify-between w-full mt-1",
+        cell: "h-9 w-9 text-center text-sm p-0 relative flex items-center justify-center",
         ...classNames,
       }}
       components={{
